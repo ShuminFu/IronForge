@@ -1,7 +1,7 @@
 import json
 import zipfile
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 
 def read_xmind(file_path: str) -> None:

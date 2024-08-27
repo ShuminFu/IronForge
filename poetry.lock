@@ -179,7 +179,18 @@ files = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 
+[[package]]
+name = "xmind"
+version = "1.2.0"
+description = "XMind是基于Python实现，提供了对XMind思维导图进行创建、解析、更新的一站式解决方案！"
+optional = false
+python-versions = ">=3.0, <4"
+files = [
+    {file = "XMind-1.2.0-py2.py3-none-any.whl", hash = "sha256:3dddc2db2cc404adf4e8d8e83f4d92e5eda5d94c468cecb047dcc99afc3a4f3d"},
+    {file = "XMind-1.2.0.tar.gz", hash = "sha256:7641a4adf1c0a33fe0d5f515d86deba28ef3b3bcfaff2cffb2d5f6520ffa976e"},
+]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4b573f1263d914a00a60d2c257da5e7824612746e2ddb82e76d47eb74bab4c75"
+content-hash = "f14e1211d94409a59931dae63b97d7eb141465df11688861ab46147774b53856"

@@ -1,0 +1,1 @@
+This script works as a function in the specific project.

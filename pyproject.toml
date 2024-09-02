@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.12"
 ebooklib = "^0.18"
 flasgger = "^0.9.7.1"
+opencv-python = "^4.10.0.84"
 
 
 [build-system]

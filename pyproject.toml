@@ -11,6 +11,19 @@ ebooklib = "^0.18"
 flasgger = "^0.9.7.1"
 opencv-python = "^4.10.0.84"
 
+[[tool.poetry.source]]
+name = "tencent"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+priority = "primary"
+
+
+[tool.poetry.group.mnemonic.dependencies]
+cryptography = "^43.0.1"
+mnemonic = "^0.21"
+
+
+[tool.poetry.group.yolo-utils.dependencies]
+ultralytics = "^8.3.13"
 
 [build-system]
 requires = ["poetry-core"]

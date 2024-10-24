@@ -1,0 +1,50 @@
+❯ tree -L 3
+.
+├── China_Drone
+│   └── train
+│       ├── annotations
+│       └── images
+├── China_Drone.zip
+├── China_MotorBike
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+├── China_MotorBike.zip
+├── Czech
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+├── Czech.zip
+├── India
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+├── India.zip
+├── Japan
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+├── Japan.zip
+├── label.txt
+├── Norway
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+├── Norway.zip
+├── United_States
+│   ├── test
+│   │   └── images
+│   └── train
+│       ├── annotations
+│       └── images
+└── United_States.zip

@@ -25,6 +25,10 @@ mnemonic = "^0.21"
 [tool.poetry.group.yolo-utils.dependencies]
 ultralytics = "^8.3.13"
 
+
+[tool.poetry.group.translator.dependencies]
+aiohttp = "^3.10.10"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

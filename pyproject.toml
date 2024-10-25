@@ -24,6 +24,7 @@ mnemonic = "^0.21"
 
 [tool.poetry.group.yolo-utils.dependencies]
 ultralytics = "^8.3.13"
+aiofiles = "^24.1.0"
 
 
 [tool.poetry.group.translator.dependencies]

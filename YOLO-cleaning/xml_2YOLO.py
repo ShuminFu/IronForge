@@ -22,6 +22,25 @@ def convert_bbox(size, box):
     h = h * dh
     return (x, y, w, h)
 
+# def convert_annotation(xml_path, output_path, class_mapping):
+#     tree = ET.parse(xml_path)
+#     root = tree.getroot()
+#     size = root.find('size')
+#     w = int(size.find('width').text)
+#     h = int(size.find('height').text)
+#
+#     with open(output_path, 'w') as out_file:
+#         for obj in root.iter('object'):
+#             cls = obj.find('name').text
+#             if cls not in class_mapping:
+#                 continue
+#             cls_id = class_mapping[cls]
+#             xmlbox = obj.find('bndbox')
+#             b = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
+#                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
+#             bb = convert_bbox((w, h), b)
+#             out_file.write(f"{cls_id} {' '.join([str(a) for a in bb])}\n")
+
 def convert_annotation(xml_path, output_path, class_mapping):
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -29,17 +48,22 @@ def convert_annotation(xml_path, output_path, class_mapping):
     w = int(size.find('width').text)
     h = int(size.find('height').text)
 
+    # keep the image if it has at least one valid annotation
+    keep_valid_only = False
     with open(output_path, 'w') as out_file:
         for obj in root.iter('object'):
             cls = obj.find('name').text
             if cls not in class_mapping:
                 continue
+            keep_valid_only = True
             cls_id = class_mapping[cls]
             xmlbox = obj.find('bndbox')
             b = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
             bb = convert_bbox((w, h), b)
             out_file.write(f"{cls_id} {' '.join([str(a) for a in bb])}\n")
+
+    return keep_valid_only
 
 def find_image_xml_pairs(root_dir):
     image_xml_pairs = []
@@ -69,13 +93,14 @@ def process_dataset(source_path, dest_path, class_mapping):
         # Generate a new filename
         new_filename = f"{os.path.splitext(os.path.basename(img_path))[0]}_jpg.rf.{uuid.uuid4().hex[:20]}"
 
-        # Copy image with new filename
-        shutil.copy(img_path, os.path.join(dest_path, dest_folder, 'images', f"{new_filename}.jpg"))
-
-        # Convert and save annotation with new filename
-        convert_annotation(xml_path,
-                           os.path.join(dest_path, dest_folder, 'labels', f"{new_filename}.txt"),
-                           class_mapping)
+        # Convert and check if annotation is not empty
+        label_path = os.path.join(dest_path, dest_folder, 'labels', f"{new_filename}.txt")
+        if convert_annotation(xml_path, label_path, class_mapping):
+            # Copy image with new filename only if annotation is not empty
+            shutil.copy(img_path, os.path.join(dest_path, dest_folder, 'images', f"{new_filename}.jpg"))
+        else:
+            # Remove the empty label file
+            os.remove(label_path)
 
 def create_data_yaml(dest_path, class_names):
     yaml_content = f"""train: ../train/images

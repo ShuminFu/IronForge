@@ -7,18 +7,18 @@ Translates text using the python package translators. See https://pypi.org/proje
 
 from locale import getdefaultlocale
 from pathlib import Path
-from time import sleep
+from time import sleep, time
 import requests
 from albert import *
 import translators as ts
 
 md_iid = '2.3'
-md_version = "1.8"
-md_name = "Translator"
-md_description = "Translate sentences using 'translators' package"
+md_version = "1.9"
+md_name = "Translator with API"
+md_description = "Translate sentences by calling translate API such as local host libretranslate"
 md_license = "MIT"
 md_url = "https://github.com/albertlauncher/python/tree/main/translators"
-md_authors = "@manuelschneid3r"
+md_authors = "@shumin"
 md_lib_dependencies = "translators"
 
 
@@ -55,10 +55,11 @@ class Plugin(PluginInstance, TriggerQueryHandler):
         ]
 
     def handleTriggerQuery(self, query):
+        start_time = time()
         stripped = query.string.strip()
         if stripped:
-            for _ in range(50):
-                sleep(0.01)
+            for _ in range(10):
+                sleep(0.001)
                 if not query.isValid:
                     return
 
@@ -77,13 +78,26 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     "alternatives": 3,
                     "api_key": ""
                 }
-                response = requests.post(self.api_url, json=payload)
-                response.raise_for_status()
+                # 添加重试机制
+                max_retries = 3
+                for attempt in range(max_retries):
+                    response = requests.post(self.api_url, json=payload, allow_redirects=False)
+                    if response.status_code == 200:
+                        break
+                    elif response.status_code == 302:
+                        warning(f"请求被重定向，正在重试... (尝试 {attempt + 1}/{max_retries})")
+                        sleep(0.05)  # 在重试之前稍作等待
+                    else:
+                        response.raise_for_status()
+                else:
+                    raise Exception(f"达到最大重试次数 ({max_retries})，翻译失败")
                 result = response.json()
 
                 translation = result['translatedText']
                 detected_lang = result['detectedLanguage']['language']
                 alternatives = result.get('alternatives', [])
+                end_time = time()
+                elapsed_time = round(end_time - start_time, 3)
                 actions = []
                 def create_actions(text):
                     actions = []
@@ -116,7 +130,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                 query.add(StandardItem(
                     id=self.id,
                     text=translation,
-                    subtext=f"{detected_lang.upper()} > {target.upper()}",
+                    subtext=f"{detected_lang.upper()} > {target.upper()}, time: {elapsed_time}",
                     iconUrls=self.iconUrls,
                     actions=actions
                 ))
@@ -126,7 +140,7 @@ class Plugin(PluginInstance, TriggerQueryHandler):
                     query.add(StandardItem(
                     id=f"{self.id}_alt_{i}",
                     text=alt,
-                    subtext=f"{detected_lang.upper()} > {target.upper()})",
+                    subtext=f"{detected_lang.upper()} > {target.upper()}",
                     iconUrls=self.iconUrls,
                     actions=create_actions(alt)
                 ))

@@ -29,6 +29,10 @@ ultralytics = "^8.3.13"
 [tool.poetry.group.translator.dependencies]
 aiohttp = "^3.10.10"
 
+
+[tool.poetry.group.signalr.dependencies]
+pysignalr = "^1.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

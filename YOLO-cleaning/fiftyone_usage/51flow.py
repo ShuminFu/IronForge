@@ -14,24 +14,36 @@ importer = RoadDamageDatasetImporter(
 # 导入数据集
 dataset = fo.Dataset.from_importer(importer, name="road-damage-dataset")
 session = fo.launch_app(dataset)
-
+classes = dataset.distinct("ground_truth.detections.label")
 
 four.random_split(dataset, {"val": 0.25, "train": 0.75})
 train_view = dataset.match_tags("train")
 val_view = dataset.match_tags("val")
 
 val_view.export(
-   export_dir="val",
+   export_dir="/home/shumin/Downloads/RDD_yolo",
    dataset_type=fo.types.YOLOv5Dataset,
    label_field="ground_truth",
-   #classes=classes
+   classes=classes,
+    split="val"
 )
 
 train_view.export(
-   export_dir="train",
+   export_dir="/home/shumin/Downloads/RDD_yolo",
    dataset_type=fo.types.YOLOv5Dataset,
    label_field="ground_truth",
-   #classes=classes
+   classes=classes,
+   split="train"
 )
+
+
+if __name__ =="__main__":
+    train_dataset = fo.Dataset.from_dir(
+        dataset_dir="/home/shumin/Downloads/RDD_yolo5",
+        dataset_type=fo.types.YOLOv5Dataset,
+        label_field="ground_truth",
+        split="train"
+    )
+    session = fo.launch_app(train_dataset)
 
 

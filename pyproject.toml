@@ -10,6 +10,8 @@ python = "^3.12"
 ebooklib = "^0.18"
 flasgger = "^0.9.7.1"
 opencv-python = "^4.10.0.84"
+fastapi = {extras = ["standard"], version = "^0.115.4"}
+python-multipart = "^0.0.17"
 
 [[tool.poetry.source]]
 name = "tencent"
@@ -25,6 +27,8 @@ mnemonic = "^0.21"
 [tool.poetry.group.yolo-utils.dependencies]
 ultralytics = "^8.3.13"
 aiofiles = "^24.1.0"
+fiftyone = "^1.0.2"
+albumentations = "^1.4.21"
 
 
 [tool.poetry.group.translator.dependencies]
@@ -33,6 +37,10 @@ aiohttp = "^3.10.10"
 
 [tool.poetry.group.signalr.dependencies]
 pysignalr = "^1.0.0"
+
+
+[tool.poetry.group.playground.dependencies]
+promptflow-tracing = "^1.16.1"
 
 [build-system]
 requires = ["poetry-core"]

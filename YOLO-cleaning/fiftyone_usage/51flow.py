@@ -1,6 +1,6 @@
 import os
 import fiftyone as fo
-from custom_importer import RoadDamageDatasetImporter
+from dataset_ninja_importer import RoadDamageDatasetImporter
 import fiftyone.utils.random as four
 
 # 创建导入器实例

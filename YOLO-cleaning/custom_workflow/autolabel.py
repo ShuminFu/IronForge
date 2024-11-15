@@ -1,3 +1,6 @@
+"""
+This is a script for auto labelling images using custom YOLO model.
+"""
 import argparse
 import os
 from pathlib import Path

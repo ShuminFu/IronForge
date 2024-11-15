@@ -9,7 +9,7 @@ import fiftyone.core.metadata as fom
 import fiftyone.core.config as foc
 
 """
-This class is used to import datasets into fiftyone_usage with custom format fo labels,
+This class is used to import datasets into dataset_visualization with custom format fo labels,
 which looks like this:
 {
     "description": "",

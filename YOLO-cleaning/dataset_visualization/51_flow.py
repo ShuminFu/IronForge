@@ -39,11 +39,13 @@ train_view.export(
 
 if __name__ =="__main__":
     train_dataset = fo.Dataset.from_dir(
-        dataset_dir="/home/shumin/Downloads/RDD_yolo5",
+        dataset_dir="/home/shumin/Downloads/RDD_yolo5/dataset_augmented_v1",
         dataset_type=fo.types.YOLOv5Dataset,
         label_field="ground_truth",
-        split="train"
+        split="train",
+        max_sampels=100
     )
     session = fo.launch_app(train_dataset)
+    input("按回车键退出程序...")
 
 

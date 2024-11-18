@@ -34,7 +34,7 @@ def colors(palette):
         description: A list of colors (may be filtered by palette)
         schema:
           $ref: '#/definitions/Palette'
-        examples:
+        training_script:
           rgb: ['red', 'green', 'blue']
     """
     all_colors = {

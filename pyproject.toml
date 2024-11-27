@@ -12,6 +12,7 @@ flasgger = "^0.9.7.1"
 opencv-python = "^4.10.0.84"
 fastapi = {extras = ["standard"], version = "^0.115.4"}
 python-multipart = "^0.0.17"
+curl-cffi = "^0.7.3"
 
 [[tool.poetry.source]]
 name = "tencent"

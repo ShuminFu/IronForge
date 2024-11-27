@@ -24,8 +24,10 @@ def process_file(file_path):
     new_lines = []
     for line in lines:
         parts = line.strip().split()
-        if len(parts) == 5:  # YOLO格式
-            cls, x_center, y_center, width, height = map(float, parts)
+        if len(parts) in [5, 6]:  # YOLO格式 (标准或带confidence)
+            # 如果是带confidence的格式(len=6)，忽略最后的confidence值
+            cls = float(parts[0])
+            x_center, y_center, width, height = map(float, parts[1:5])
             new_line = yolo_to_polygon(int(cls), x_center, y_center, width, height)
         else:  # 假设其他格式为polygon,保持不变
             new_line = line.strip()

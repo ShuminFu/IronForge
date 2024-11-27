@@ -1,5 +1,5 @@
-from augmentation_pipeline_utils.config import AugmentationConfig
-from augmentation_pipeline_utils.pipeline import AugmentationPipeline
+from albumentation_pipeline_v2.config import AugmentationConfig
+from albumentation_pipeline_v2.pipeline import AugmentationPipeline
 
 def main():
     config = AugmentationConfig(

@@ -70,7 +70,7 @@ def create_tree_view(json_data, level=0) -> str:
                 items.append(f'''
                     <div class="tree-item" style="margin-left: {level * 20}px">
                         <div class="tree-line"></div>
-                        <span class="tree-toggle">▼</span>
+                        <div class="tree-toggle" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.nextElementSibling.classList.toggle('collapsed')">▼</div>
                         <span class="tree-key">{html.escape(str(key))}</span>
                         <div class="tree-content">
                             {create_tree_view(value, level + 1)}
@@ -83,7 +83,7 @@ def create_tree_view(json_data, level=0) -> str:
                     <div class="tree-item leaf" style="margin-left: {level * 20}px">
                         <div class="tree-line"></div>
                         <span class="tree-key">{html.escape(str(key))}</span>:
-                        <span class="tree-value" data-type="{value_type}">{html.escape(str(value))}</span>
+                        <span class="tree-value copyable" data-type="{value_type}" onclick="copyToClipboard(this)" title="点击复制">{html.escape(str(value))}</span>
                     </div>
                 ''')
         return ''.join(items)
@@ -94,7 +94,7 @@ def create_tree_view(json_data, level=0) -> str:
                 items.append(f'''
                     <div class="tree-item" style="margin-left: {level * 20}px">
                         <div class="tree-line"></div>
-                        <span class="tree-toggle">▼</span>
+                        <div class="tree-toggle" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.nextElementSibling.classList.toggle('collapsed')">▼</div>
                         <span class="tree-key">[{i}]</span>
                         <div class="tree-content">
                             {create_tree_view(value, level + 1)}
@@ -107,13 +107,13 @@ def create_tree_view(json_data, level=0) -> str:
                     <div class="tree-item leaf" style="margin-left: {level * 20}px">
                         <div class="tree-line"></div>
                         <span class="tree-key">[{i}]</span>:
-                        <span class="tree-value" data-type="{value_type}">{html.escape(str(value))}</span>
+                        <span class="tree-value copyable" data-type="{value_type}" onclick="copyToClipboard(this)" title="点击复制">{html.escape(str(value))}</span>
                     </div>
                 ''')
         return ''.join(items)
     else:
         value_type = get_value_type(json_data)
-        return f'<span class="tree-value" data-type="{value_type}">{html.escape(str(json_data))}</span>'
+        return f'<span class="tree-value copyable" data-type="{value_type}" onclick="copyToClipboard(this)" title="点击复制">{html.escape(str(json_data))}</span>'
 
 
 def format_json(input_json: str, view_type: str = "normal") -> str | dict:
@@ -132,6 +132,9 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
         if view_type == "tree":
             tree_html = create_tree_view(parsed)
             return f"""
+            <div class="tree-view">
+                {tree_html}
+            </div>
             <style>
                 .tree-view {{
                     background: #1e1e1e;
@@ -179,9 +182,13 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
                     cursor: pointer;
                     display: inline-block;
                     width: 20px;
+                    height: 20px;
+                    line-height: 20px;
+                    text-align: center;
                     color: #888;
                     user-select: none;
                     transition: transform 0.2s;
+                    transform-origin: center center;
                 }}
 
                 .tree-toggle.collapsed {{
@@ -196,6 +203,17 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
 
                 .tree-value {{
                     color: #a6e22e;
+                }}
+
+                .tree-value.copyable {{
+                    cursor: pointer;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    transition: background-color 0.2s;
+                }}
+
+                .tree-value.copyable:hover {{
+                    background-color: rgba(255, 255, 255, 0.1);
                 }}
 
                 .tree-value[data-type="string"] {{
@@ -220,52 +238,29 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
                 .tree-content.collapsed {{
                     display: none;
                 }}
+
+                /* 复制成功的动画效果 */
+                @keyframes copySuccess {{
+                    0% {{ background-color: rgba(255, 255, 255, 0.1); }}
+                    50% {{ background-color: rgba(0, 255, 0, 0.2); }}
+                    100% {{ background-color: rgba(255, 255, 255, 0.1); }}
+                }}
+
+                .copy-success {{
+                    animation: copySuccess 0.5s ease-in-out;
+                }}
             </style>
             <script>
-                function toggleTreeNode(event) {{
-                    const toggle = event.target;
-                    const treeItem = toggle.closest('.tree-item');
-                    if (!treeItem) return;
-
-                    toggle.classList.toggle('collapsed');
-                    const content = treeItem.querySelector('.tree-content');
-                    if (content) {{
-                        content.classList.toggle('collapsed');
-                    }}
-                    event.stopPropagation();
-                }}
-
-                function initTreeView() {{
-                    const toggles = document.querySelectorAll('.tree-toggle');
-                    toggles.forEach(toggle => {{
-                        toggle.removeEventListener('click', toggleTreeNode);
-                        toggle.addEventListener('click', toggleTreeNode);
+                function copyToClipboard(element) {{
+                    const text = element.textContent;
+                    navigator.clipboard.writeText(text).then(() => {{
+                        element.classList.add('copy-success');
+                        setTimeout(() => {{
+                            element.classList.remove('copy-success');
+                        }}, 500);
                     }});
                 }}
-
-                // 使用 MutationObserver 监听DOM变化
-                if (typeof treeViewObserver === 'undefined') {{
-                    window.treeViewObserver = new MutationObserver((mutations) => {{
-                        mutations.forEach((mutation) => {{
-                            if (mutation.addedNodes.length) {{
-                                setTimeout(initTreeView, 0);
-                            }}
-                        }});
-                    }});
-
-                    treeViewObserver.observe(document.body, {{
-                        childList: true,
-                        subtree: true
-                    }});
-                }}
-
-                // 初始化
-                document.addEventListener('DOMContentLoaded', initTreeView);
-                setTimeout(initTreeView, 100);
             </script>
-            <div class="tree-view">
-                {tree_html}
-            </div>
             """
 
         # 普通视图的处理逻辑
@@ -436,9 +431,9 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("# JSON格式化工具")
     gr.Markdown("支持任意格式JSON的美化，包括压缩格式。支持语法高亮和折叠功能。")
-    gr.Markdown("* 点击 ▼ 按钮可以折叠/展开JSON对象和数组（普通视图和树形视图）")
+    gr.Markdown("* 默认使用树形视图，点击 ▼ 按钮可以折叠/展开JSON对象和数组")
     gr.Markdown("* 支持无限层级的折叠")
-    gr.Markdown("* 支持Gradio内置视图、普通视图和树形视图切换")
+    gr.Markdown("* 支持树形视图、普通视图和Gradio内置视图切换")
     gr.Markdown("* 输出窗口支持拖拽调整大小")
 
     # 添加自定义CSS
@@ -534,8 +529,8 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
     with gr.Row():
         view_type = gr.Radio(
-            choices=["gradio", "normal", "tree"],
-            value="gradio",
+            choices=["tree", "normal", "gradio"],
+            value="tree",
             label="视图类型",
             interactive=True
         )

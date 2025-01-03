@@ -5,6 +5,69 @@ from pygments.lexers import JsonLexer
 from pygments.formatters import HtmlFormatter
 import html
 import re
+import ast
+from datetime import datetime
+from enum import Enum
+
+
+def parse_debug_output(debug_str: str) -> dict:
+    """解析Python对象的调试输出字符串，转换为JSON兼容的字典"""
+    if not debug_str.strip():
+        return {}
+
+    # 移除可能的变量名和箭头
+    debug_str = re.sub(r'^.*?>>>\s*', '', debug_str)
+
+    def convert_datetime(match):
+        try:
+            datetime_str = match.group(1)
+            parts = [x.strip() for x in datetime_str.split(',')]
+            params = []
+            for part in parts:
+                if part.startswith('tzinfo'):
+                    continue
+                try:
+                    params.append(int(part))
+                except ValueError:
+                    continue
+            if len(params) >= 3:  # 至少需要年月日
+                dt = datetime(*params)
+                if 'tzinfo=datetime.timezone.utc' in datetime_str:
+                    return f'"{dt.strftime("%Y-%m-%dT%H:%M:%SZ")}"'
+                return f'"{dt.isoformat()}"'
+        except:
+            pass
+        return match.group(0)
+
+    def convert_enum(match):
+        return f'"{match.group(2)}"'
+
+    # 预处理特殊类型
+    # 1. 处理datetime
+    debug_str = re.sub(r'datetime\.datetime\((.*?)\)', convert_datetime, debug_str)
+    # 2. 处理枚举
+    debug_str = re.sub(r'<\w+\.(\w+): \'(.+?)\'>', convert_enum, debug_str)
+    # 3. 将自定义类的格式转换为字典格式
+    debug_str = re.sub(r'(\w+)\((.*?)\)', r'{\2}', debug_str)
+    # 4. 处理参数格式
+    debug_str = re.sub(r'(\w+)=', r'"\1":', debug_str)
+    # 5. 移除多余的空格和换行
+    debug_str = re.sub(r'\s+', ' ', debug_str)
+
+    try:
+        # 尝试解析处理后的字符串
+        return json.loads(debug_str)
+    except json.JSONDecodeError as e:
+        try:
+            # 如果json解析失败，尝试用ast解析
+            result = ast.literal_eval(debug_str)
+            if isinstance(result, dict):
+                return result
+            # 如果不是字典，转换为JSON
+            return json.loads(json.dumps(result))
+        except (ValueError, SyntaxError):
+            print(f"解析错误: {str(e)}")
+            return {}
 
 
 def process_json_line(line: str, indent_level: int = 0) -> tuple[str, bool]:
@@ -560,6 +623,13 @@ def process_input(input_text: str, request: gr.Request):
     """处理输入，如果输入为空则尝试从URL参数加载"""
     if not input_text:
         return load_from_params(request)
+
+    # 检查是否是Python调试输出格式
+    if '>>>' in input_text or any(x in input_text for x in ['datetime.', '<UserRole.', '<MessageType.']):
+        parsed_data = parse_debug_output(input_text)
+        if parsed_data is not None:
+            return json.dumps(parsed_data, ensure_ascii=False, indent=2)
+
     return input_text
 
 

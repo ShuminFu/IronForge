@@ -134,6 +134,7 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
             return f"""
             <div class="tree-view">
                 {tree_html}
+                <div id="temp-container" style="position: absolute; top: -9999px; left: -9999px;"></div>
             </div>
             <style>
                 .tree-view {{
@@ -251,15 +252,130 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
                 }}
             </style>
             <script>
-                function copyToClipboard(element) {{
+                async function copyToClipboard(element) {{
                     const text = element.textContent;
-                    navigator.clipboard.writeText(text).then(() => {{
-                        element.classList.add('copy-success');
-                        setTimeout(() => {{
-                            element.classList.remove('copy-success');
-                        }}, 500);
+
+                    try {{
+                        // 优先使用现代 Clipboard API
+                        if (navigator.clipboard && window.isSecureContext) {{
+                            await navigator.clipboard.writeText(text);
+                            showCopySuccess(element);
+                            return;
+                        }}
+
+                        // 备选方案1: 使用 execCommand
+                        const textArea = document.createElement('textarea');
+                        textArea.value = text;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-9999px';
+                        textArea.style.top = '-9999px';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+
+                        try {{
+                            const successful = document.execCommand('copy');
+                            if (successful) {{
+                                showCopySuccess(element);
+                                return;
+                            }}
+                        }} catch (err) {{
+                            console.warn('execCommand 复制失败:', err);
+                        }} finally {{
+                            document.body.removeChild(textArea);
+                        }}
+
+                        // 备选方案2: 使用 Selection API
+                        const range = document.createRange();
+                        range.selectNodeContents(element);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+
+                        try {{
+                            const successful = document.execCommand('copy');
+                            if (successful) {{
+                                showCopySuccess(element);
+                                return;
+                            }}
+                        }} catch (err) {{
+                            console.warn('Selection API 复制失败:', err);
+                        }}
+
+                        // 如果所有方法都失败了，提示用户
+                        console.error('所有复制方法都失败了');
+                        alert('复制失败，请尝试手动复制（Ctrl+C）');
+
+                    }} catch (err) {{
+                        console.error('复制过程出错:', err);
+                        alert('复制失败，请尝试手动复制（Ctrl+C）');
+                    }}
+                }}
+
+                function showCopySuccess(element) {{
+                    // 添加复制成功的视觉反馈
+                    element.classList.add('copy-success');
+                    setTimeout(() => {{
+                        element.classList.remove('copy-success');
+                    }}, 500);
+                }}
+
+                // 初始化复制功能
+                function initCopyListeners() {{
+                    const values = document.querySelectorAll('.tree-value.copyable');
+                    values.forEach(value => {{
+                        value.onclick = async (e) => {{
+                            e.preventDefault();
+                            e.stopPropagation();
+                            await copyToClipboard(value);
+                        }};
                     }});
                 }}
+
+                // 确保在页面加载完成后初始化
+                if (document.readyState === 'loading') {{
+                    document.addEventListener('DOMContentLoaded', initCopyListeners);
+                }} else {{
+                    initCopyListeners();
+                }}
+
+                // 使用 MutationObserver 监听DOM变化
+                const copyObserver = new MutationObserver((mutations) => {{
+                    let shouldInit = false;
+                    mutations.forEach((mutation) => {{
+                        if (mutation.addedNodes.length) {{
+                            shouldInit = true;
+                        }}
+                    }});
+                    if (shouldInit) {{
+                        setTimeout(initCopyListeners, 0);
+                    }}
+                }});
+
+                // 开始观察DOM变化
+                copyObserver.observe(document.body, {{
+                    childList: true,
+                    subtree: true
+                }});
+
+                // 添加复制相关的样式
+                const style = document.createElement('style');
+                style.textContent = `
+                    .copy-success {{
+                        background-color: rgba(0, 255, 0, 0.2) !important;
+                        transition: background-color 0.5s ease;
+                    }}
+                    .tree-value.copyable {{
+                        cursor: pointer;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        transition: background-color 0.2s;
+                    }}
+                    .tree-value.copyable:hover {{
+                        background-color: rgba(255, 255, 255, 0.1);
+                    }}
+                `;
+                document.head.appendChild(style);
             </script>
             """
 
@@ -427,14 +543,28 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
         return f"发生错误: {str(e)}" if view_type != "gradio" else {}
 
 
-# 创建Gradio界面
+def load_from_params(request: gr.Request):
+    """从URL查询参数中加载JSON数据"""
+    try:
+        json_data = request.query_params.get("json", "")
+        if json_data:
+            # 尝试解析JSON以验证其有效性
+            json.loads(json_data)
+            return json_data
+    except:
+        return ""
+    return ""
+
+
+def process_input(input_text: str, request: gr.Request):
+    """处理输入，如果输入为空则尝试从URL参数加载"""
+    if not input_text:
+        return load_from_params(request)
+    return input_text
+
+
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# JSON格式化工具")
-    gr.Markdown("支持任意格式JSON的美化，包括压缩格式。支持语法高亮和折叠功能。")
-    gr.Markdown("* 默认使用树形视图，点击 ▼ 按钮可以折叠/展开JSON对象和数组")
-    gr.Markdown("* 支持无限层级的折叠")
-    gr.Markdown("* 支持树形视图、普通视图和Gradio内置视图切换")
-    gr.Markdown("* 输出窗口支持拖拽调整大小")
+    gr.Markdown("# Shumin's magic tool")
 
     # 添加自定义CSS
     gr.HTML("""
@@ -469,6 +599,69 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
 
         .resizable-box::-webkit-scrollbar-thumb:hover {
             background: #666;
+        }
+
+        /* 调整控制面板样式 */
+        .control-panel {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px 15px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin: 15px 0;
+            border: 1px solid #333;
+        }
+
+        .control-panel > div {
+            margin: 0 !important;
+        }
+
+        .control-panel .format-button {
+            margin-left: auto !important;
+        }
+
+        /* 优化Radio组件样式 */
+        .view-type-radio.gradio-radio {
+            gap: 12px !important;
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .view-type-radio.gradio-radio .wrap {
+            background: #2a2a2a !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            border: 1px solid #444 !important;
+            transition: all 0.3s ease !important;
+            color: #ddd !important;
+        }
+
+        .view-type-radio.gradio-radio .wrap:hover {
+            border-color: #2196f3 !important;
+            background: #333 !important;
+        }
+
+        .view-type-radio.gradio-radio .wrap.selected {
+            background: #2196f3 !important;
+            color: white !important;
+            border-color: #2196f3 !important;
+        }
+
+        /* 格式化按钮样式 */
+        .format-btn.primary {
+            background: #2196f3 !important;
+            border: none !important;
+            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .format-btn.primary:hover {
+            background: #1976d2 !important;
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4) !important;
+            transform: translateY(-1px);
         }
 
         /* 调整JSON组件的样式 */
@@ -524,23 +717,33 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             show_copy_button=True,
             container=True,
             scale=1,
-            interactive=True,
-        )
-
-    with gr.Row():
-        view_type = gr.Radio(
-            choices=["tree", "normal", "gradio"],
-            value="tree",
-            label="视图类型",
             interactive=True
         )
-        format_btn = gr.Button("格式化", variant="primary", size="lg")
+
+    with gr.Row(elem_classes="control-panel"):
+        with gr.Column(scale=2):
+            view_type = gr.Radio(
+                choices=["树形视图", "普通视图", "Gradio视图"],
+                value="树形视图",
+                label="",
+                elem_classes="view-type-radio",
+                interactive=True,
+                container=False
+            )
+
+        with gr.Column(scale=1, elem_classes="format-button"):
+            format_btn = gr.Button(
+                "格式化",
+                variant="primary",
+                size="lg",
+                elem_classes="format-btn"
+            )
 
     with gr.Row():
         with gr.Column(elem_classes="resizable-box", scale=1):
             output_json = gr.JSON(
-                label=None,  # 移除label
-                container=False,  # 移除container
+                label=None,
+                container=False,
                 visible=True,
                 elem_classes="json-component"
             )
@@ -550,20 +753,28 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 visible=False
             )
 
-
-    def update_view(input_text: str, view_type: str):
-        result = format_json(input_text, view_type)
-        if view_type == "gradio":
+    def update_view(input_text: str, view_type: str, request: gr.Request):
+        input_text = process_input(input_text, request)
+        # 转换视图类型
+        view_map = {
+            "树形视图": "tree",
+            "普通视图": "normal",
+            "Gradio视图": "gradio"
+        }
+        internal_view_type = view_map.get(view_type, "tree")
+        result = format_json(input_text, internal_view_type)
+        if internal_view_type == "gradio":
             return {
                 output_html: gr.update(visible=False),
-                output_json: gr.update(visible=True, value=result)
+                output_json: gr.update(visible=True, value=result),
+                input_json: gr.update(value=input_text)
             }
         else:
             return {
                 output_html: gr.update(visible=True, value=result),
-                output_json: gr.update(visible=False)
+                output_json: gr.update(visible=False),
+                input_json: gr.update(value=input_text)
             }
-
 
     # 添加示例数据
     examples = gr.Examples(
@@ -576,25 +787,30 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
         inputs=[input_json],
     )
 
+    # 页面加载时自动格式化
+    @demo.load(outputs=[output_html, output_json, input_json])
+    def on_load(request: gr.Request):
+        return update_view("", "树形视图", request)
+
     # 绑定按钮点击事件
     format_btn.click(
         fn=update_view,
         inputs=[input_json, view_type],
-        outputs=[output_html, output_json],
+        outputs=[output_html, output_json, input_json]
     )
 
     # 输入框回车时自动格式化
     input_json.submit(
         fn=update_view,
         inputs=[input_json, view_type],
-        outputs=[output_html, output_json],
+        outputs=[output_html, output_json, input_json]
     )
 
     # 视图类型改变时自动更新
     view_type.change(
         fn=update_view,
         inputs=[input_json, view_type],
-        outputs=[output_html, output_json],
+        outputs=[output_html, output_json, input_json]
     )
 
 if __name__ == "__main__":

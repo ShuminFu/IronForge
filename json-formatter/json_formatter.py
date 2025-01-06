@@ -472,6 +472,101 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
             .highlight .mi, .highlight .mf {{ color: #ae81ff !important; }}
             .highlight .kc {{ color: #fd971f !important; }}
             .highlight .nt {{ color: #f92672 !important; }}
+
+            /* 格式化按钮样式 */
+            .format-btn.primary {{
+            background: #2196f3 !important;
+                border: none !important;
+                box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3) !important;
+                transition: all 0.3s ease !important;
+                margin-right: 10px !important;
+            }}
+
+            .format-btn.primary:hover {{
+            background: #1976d2 !important;
+                box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4) !important;
+                transform: translateY(-1px);
+            }}
+
+            /* 清空按钮样式 */
+            .clear-btn.secondary {{
+            background: #666 !important;
+                border: none !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+                transition: all 0.3s ease !important;
+            }}
+
+            .clear-btn.secondary:hover {{
+            background: #555 !important;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+                transform: translateY(-1px);
+            }}
+
+            /* 按钮容器样式 */
+            .format-button {{
+            display: flex !important;
+                gap: 10px !important;
+                justify-content: flex-end !important;
+            }}
+
+            /* 调整JSON组件的样式 */
+            .resizable-box > .gradio-container {{
+            height: 100%;
+            }}
+
+            .resizable-box > .gradio-container > div:first-child {{
+            height: 100%;
+                margin: 0;
+            }}
+
+            .resizable-box .json-component {{
+            height: 100% !important;
+                background: transparent;
+            }}
+
+            .resizable-box .json-component > div {{
+            height: 100% !important;
+                max-height: none !important;
+            }}
+
+            .resizable-box .json-component > div > pre {{
+            height: 100% !important;
+                max-height: none !important;
+            }}
+
+            /* 调整HTML视图的样式 */
+            .resizable-box .json-viewer {{
+            margin: 0;
+                height: 100%;
+            }}
+
+            /* 调整树形视图的样式 */
+            .resizable-box .tree-view {{
+            margin: 0;
+                height: 100%;
+            }}
+
+            /* 移除JSON组件的label */
+            .resizable-box .gradio-container .label-wrap {{
+            display: none;
+            }}
+
+            /* 按钮组样式 */
+            .button-group {{
+            display: flex !important;
+                gap: 10px !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+            }}
+
+            .button-group > div {{
+            flex: 0 0 auto !important;
+            }}
+
+            .format-btn.primary, .clear-btn.secondary {{
+            margin: 0 !important;
+                min-width: 80px !important;
+            }}
         </style>
         <script>
             function toggleFoldButton(event) {{
@@ -690,12 +785,34 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             border: none !important;
             box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3) !important;
             transition: all 0.3s ease !important;
+            margin-right: 10px !important;
         }
 
         .format-btn.primary:hover {
             background: #1976d2 !important;
             box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4) !important;
             transform: translateY(-1px);
+        }
+
+        /* 清空按钮样式 */
+        .clear-btn.secondary {
+            background: #666 !important;
+            border: none !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .clear-btn.secondary:hover {
+            background: #555 !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        /* 按钮容器样式 */
+        .format-button {
+            display: flex !important;
+            gap: 10px !important;
+            justify-content: flex-end !important;
         }
 
         /* 调整JSON组件的样式 */
@@ -765,13 +882,20 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 container=False
             )
 
-        with gr.Column(scale=1, elem_classes="format-button"):
-            format_btn = gr.Button(
-                "格式化",
-                variant="primary",
-                size="lg",
-                elem_classes="format-btn"
-            )
+        with gr.Column(scale=1):
+            with gr.Row(elem_classes="button-group"):
+                format_btn = gr.Button(
+                    "格式化",
+                    variant="primary",
+                    size="lg",
+                    elem_classes="format-btn"
+                )
+                clear_btn = gr.Button(
+                    "清空",
+                    variant="secondary",
+                    size="lg",
+                    elem_classes="clear-btn"
+                )
 
     with gr.Row():
         with gr.Column(elem_classes="resizable-box", scale=1):
@@ -809,6 +933,21 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 output_json: gr.update(visible=False),
                 input_json: gr.update(value=input_text)
             }
+
+    def clear_all():
+        """清空所有输入和输出"""
+        return {
+            output_html: gr.update(visible=False),
+            output_json: gr.update(visible=True, value=None),
+            input_json: gr.update(value="")
+        }
+
+    # 绑定清空按钮点击事件
+    clear_btn.click(
+        fn=clear_all,
+        inputs=[],
+        outputs=[output_html, output_json, input_json]
+    )
 
     # 添加示例数据
     examples = gr.Examples(

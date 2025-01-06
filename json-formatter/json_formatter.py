@@ -9,7 +9,17 @@ import ast
 from datetime import datetime
 from enum import Enum
 from object_to_json_parser import ObjectParser
+import os
 
+# 获取当前文件所在目录
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_css():
+    """加载CSS文件"""
+    css_path = os.path.join(CURRENT_DIR, "static", "styles.css")
+    with open(css_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 def parse_debug_output(debug_str: str) -> dict:
     """解析Python对象的调试输出字符串，转换为JSON兼容的字典"""
@@ -695,169 +705,9 @@ def process_input(input_text: str, request: gr.Request):
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("# Shumin's magic tool")
 
-    # 添加自定义CSS
-    gr.HTML("""
-    <style>
-        .resizable-box {
-            resize: both;
-            overflow: auto;
-            min-height: 300px;
-            min-width: 200px;
-            max-height: 800px;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        /* 自定义滚动条样式 */
-        .resizable-box::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        .resizable-box::-webkit-scrollbar-track {
-            background: #1e1e1e;
-            border-radius: 4px;
-        }
-
-        .resizable-box::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 4px;
-        }
-
-        .resizable-box::-webkit-scrollbar-thumb:hover {
-            background: #666;
-        }
-
-        /* 调整控制面板样式 */
-        .control-panel {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 10px 15px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin: 15px 0;
-            border: 1px solid #333;
-        }
-
-        .control-panel > div {
-            margin: 0 !important;
-        }
-
-        .control-panel .format-button {
-            margin-left: auto !important;
-        }
-
-        /* 优化Radio组件样式 */
-        .view-type-radio.gradio-radio {
-            gap: 12px !important;
-            padding: 0 !important;
-            border: none !important;
-            background: transparent !important;
-        }
-
-        .view-type-radio.gradio-radio .wrap {
-            background: #2a2a2a !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            border: 1px solid #444 !important;
-            transition: all 0.3s ease !important;
-            color: #ddd !important;
-        }
-
-        .view-type-radio.gradio-radio .wrap:hover {
-            border-color: #2196f3 !important;
-            background: #333 !important;
-        }
-
-        .view-type-radio.gradio-radio .wrap.selected {
-            background: #2196f3 !important;
-            color: white !important;
-            border-color: #2196f3 !important;
-        }
-
-        /* 格式化按钮样式 */
-        .format-btn.primary {
-            background: #2196f3 !important;
-            border: none !important;
-            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3) !important;
-            transition: all 0.3s ease !important;
-            margin-right: 10px !important;
-        }
-
-        .format-btn.primary:hover {
-            background: #1976d2 !important;
-            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4) !important;
-            transform: translateY(-1px);
-        }
-
-        /* 清空按钮样式 */
-        .clear-btn.secondary {
-            background: #666 !important;
-            border: none !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-            transition: all 0.3s ease !important;
-        }
-
-        .clear-btn.secondary:hover {
-            background: #555 !important;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-            transform: translateY(-1px);
-        }
-
-        /* 按钮容器样式 */
-        .format-button {
-            display: flex !important;
-            gap: 10px !important;
-            justify-content: flex-end !important;
-        }
-
-        /* 调整JSON组件的样式 */
-        .resizable-box > .gradio-container {
-            height: 100%;
-        }
-
-        .resizable-box > .gradio-container > div:first-child {
-            height: 100%;
-            margin: 0;
-        }
-
-        .resizable-box .json-component {
-            height: 100% !important;
-            background: transparent;
-        }
-
-        .resizable-box .json-component > div {
-            height: 100% !important;
-            max-height: none !important;
-        }
-
-        .resizable-box .json-component > div > pre {
-            height: 100% !important;
-            max-height: none !important;
-        }
-
-        /* 调整HTML视图的样式 */
-        .resizable-box .json-viewer {
-            margin: 0;
-            height: 100%;
-        }
-
-        /* 调整树形视图的样式 */
-        .resizable-box .tree-view {
-            margin: 0;
-            height: 100%;
-        }
-
-        /* 移除JSON组件的label */
-        .resizable-box .gradio-container .label-wrap {
-            display: none;
-        }
-    </style>
-    """)
+    # 加载外部CSS
+    css = load_css()
+    gr.HTML(f"<style>{css}</style>")
 
     with gr.Row():
         input_json = gr.Textbox(

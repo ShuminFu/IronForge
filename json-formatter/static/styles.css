@@ -1,0 +1,284 @@
+.resizable-box {
+    resize: both;
+    overflow: auto;
+    min-height: 300px;
+    min-width: 200px;
+    max-height: 800px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* 自定义滚动条样式 */
+.resizable-box::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.resizable-box::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 4px;
+}
+
+.resizable-box::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.resizable-box::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* 调整控制面板样式 */
+.control-panel {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 15px;
+    background: #1e1e1e;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    margin: 15px 0;
+    border: 1px solid #333;
+}
+
+.control-panel > div {
+    margin: 0 !important;
+}
+
+/* 优化Radio组件样式 */
+.view-type-radio.gradio-radio {
+    gap: 12px !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.view-type-radio.gradio-radio .wrap {
+    background: #2a2a2a !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    border: 1px solid #444 !important;
+    transition: all 0.3s ease !important;
+    color: #ddd !important;
+}
+
+.view-type-radio.gradio-radio .wrap:hover {
+    border-color: #2196f3 !important;
+    background: #333 !important;
+}
+
+.view-type-radio.gradio-radio .wrap.selected {
+    background: #2196f3 !important;
+    color: white !important;
+    border-color: #2196f3 !important;
+}
+
+/* 按钮组样式 */
+.button-group {
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+.button-group > div {
+    flex: 0 0 auto !important;
+}
+
+/* 格式化按钮样式 */
+.format-btn.primary {
+    background: #2196f3 !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+    min-width: 80px !important;
+}
+
+.format-btn.primary:hover {
+    background: #1976d2 !important;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+/* 清空按钮样式 */
+.clear-btn.secondary {
+    background: #666 !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.3s ease !important;
+    min-width: 80px !important;
+}
+
+.clear-btn.secondary:hover {
+    background: #555 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+/* JSON组件样式 */
+.resizable-box > .gradio-container {
+    height: 100%;
+}
+
+.resizable-box > .gradio-container > div:first-child {
+    height: 100%;
+    margin: 0;
+}
+
+.resizable-box .json-component {
+    height: 100% !important;
+    background: transparent;
+}
+
+.resizable-box .json-component > div {
+    height: 100% !important;
+    max-height: none !important;
+}
+
+.resizable-box .json-component > div > pre {
+    height: 100% !important;
+    max-height: none !important;
+}
+
+/* JSON视图样式 */
+.json-viewer {
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0;
+    height: 100%;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #f8f8f2;
+    overflow: auto;
+}
+
+/* 树形视图样式 */
+.tree-view {
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0;
+    height: 100%;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #f8f8f2;
+    overflow: auto;
+    position: relative;
+}
+
+.tree-item {
+    padding: 2px 0;
+    white-space: nowrap;
+    position: relative;
+}
+
+.tree-line {
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #444;
+}
+
+.tree-item:before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background-color: #444;
+}
+
+.tree-item.leaf:before {
+    width: 8px;
+}
+
+.tree-toggle {
+    cursor: pointer;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: #888;
+    user-select: none;
+    transition: transform 0.2s;
+    transform-origin: center center;
+}
+
+.tree-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+.tree-key {
+    color: #f92672 !important;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.tree-value {
+    color: #a6e22e;
+}
+
+.tree-value.copyable {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.tree-value.copyable:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tree-value[data-type="string"] {
+    color: #e6db74 !important;
+}
+
+.tree-value[data-type="number"] {
+    color: #ae81ff !important;
+}
+
+.tree-value[data-type="boolean"] {
+    color: #fd971f !important;
+}
+
+.tree-value[data-type="null"] {
+    color: #888 !important;
+}
+
+.tree-content {
+    display: block;
+    position: relative;
+    margin-left: 20px;
+}
+
+.tree-content.collapsed {
+    display: none;
+}
+
+/* 复制成功的动画效果 */
+@keyframes copySuccess {
+    0% { background-color: rgba(255, 255, 255, 0.1); }
+    50% { background-color: rgba(0, 255, 0, 0.2); }
+    100% { background-color: rgba(255, 255, 255, 0.1); }
+}
+
+.copy-success {
+    animation: copySuccess 0.5s ease-in-out;
+}
+
+/* Pygments Monokai 主题 */
+.highlight { background: transparent !important; color: #f8f8f2 !important; }
+.highlight .p { color: #f8f8f2 !important; }
+.highlight .s2, .highlight .s1 { color: #a6e22e !important; }
+.highlight .mi, .highlight .mf { color: #ae81ff !important; }
+.highlight .kc { color: #fd971f !important; }
+.highlight .nt { color: #f92672 !important; } 

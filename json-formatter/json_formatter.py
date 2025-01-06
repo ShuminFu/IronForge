@@ -563,11 +563,21 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
 def load_from_params(request: gr.Request):
     """从URL查询参数中加载JSON数据"""
     try:
+        # 尝试获取json参数
         json_data = request.query_params.get("json", "")
         if json_data:
             # 尝试解析JSON以验证其有效性
             json.loads(json_data)
             return json_data
+
+        # 尝试获取object参数
+        object_data = request.query_params.get("object", "")
+        if object_data:
+            # 使用parse_debug_output解析对象格式
+            parsed_data = parse_debug_output(object_data)
+            if parsed_data:
+                return json.dumps(parsed_data, ensure_ascii=False, indent=2)
+
     except:
         return ""
     return ""

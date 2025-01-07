@@ -6,8 +6,7 @@ from pygments.formatters import HtmlFormatter
 import html
 import re
 import ast
-from datetime import datetime
-from enum import Enum
+
 from object_to_json_parser import ObjectParser
 import os
 
@@ -21,6 +20,7 @@ def load_css():
     with open(css_path, "r", encoding="utf-8") as f:
         return f.read()
 
+
 def parse_debug_output(debug_str: str) -> dict:
     """解析Python对象的调试输出字符串，转换为JSON兼容的字典"""
     if not debug_str.strip():
@@ -28,6 +28,26 @@ def parse_debug_output(debug_str: str) -> dict:
 
     # 移除可能的变量名和箭头
     debug_str = re.sub(r'^.*?>>>\s*', '', debug_str)
+
+    # 预处理字符串
+    debug_str = debug_str.strip()
+
+    # 处理从VSCode DataView复制的格式
+    if debug_str.startswith("('") and debug_str.endswith(")"):
+        try:
+            # 1. 将换行符替换为空格
+            debug_str = ' '.join(line.strip() for line in debug_str.splitlines())
+            # 2. 移除多余的空格
+            debug_str = re.sub(r'\s+', ' ', debug_str)
+
+            # 将字符串作为Python表达式求值
+            parsed_tuple = ast.literal_eval(debug_str)
+            if isinstance(parsed_tuple, tuple) and len(parsed_tuple) == 2:
+                # 返回元组的第二个元素(通常是字典部分)
+                return parsed_tuple[1]
+        except Exception as e:
+            print(f"Debug: Parse error - {str(e)}")
+            pass
 
     # 使用ObjectParser解析对象
     parser = ObjectParser()
@@ -149,8 +169,16 @@ def format_json(input_json: str, view_type: str = "normal") -> str | dict:
         if not input_json.strip():
             return "请输入JSON数据" if view_type != "gradio" else {}
 
-        # 解析JSON
-        parsed = json.loads(input_json)
+        # 检查是否是VSCode DataView格式
+        if input_json.strip().startswith("('") and input_json.strip().endswith(")"):
+            parsed = parse_debug_output(input_json)
+        else:
+            # 尝试解析为标准JSON
+            try:
+                parsed = json.loads(input_json)
+            except json.JSONDecodeError:
+                # 如果JSON解析失败，尝试作为Python对象解析
+                parsed = parse_debug_output(input_json)
 
         # Gradio内置JSON视图
         if view_type == "gradio":

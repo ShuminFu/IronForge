@@ -1,0 +1,31 @@
+# To preserve cert files, mount a volume to /etc/letsencrypt
+
+FROM teddysun/xray:latest AS xray
+
+FROM ubuntu:latest
+
+ENV DOMAIN=""
+ENV XRAYIDS=""
+ENV EMAIL=webadmin@cloudflare.com
+ENV WSPATH=/cloud
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    certbot \
+    cron \
+    python3-certbot-nginx && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN mkdir -p /etc/nginx
+
+COPY --from=xray /usr/bin/xray /usr/bin/xray
+RUN echo "0 3 * * * certbot renew --nginx --quiet" > /etc/crontab
+RUN chmod 0644 /etc/crontab
+
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+
+EXPOSE 80 443
+
+ENTRYPOINT ["/entrypoint.sh"]

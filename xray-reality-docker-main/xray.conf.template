@@ -1,0 +1,100 @@
+{
+  "log":{
+    "access":"",
+    "loglevel":"warning",
+    "error":""
+  },
+  "inbounds":[
+    {
+      "listen":"<SERVERIP>",
+      "port":<SERVERPORT>,
+      "protocol":"vless",
+      "settings":{
+        "clients":[<REALITYCLIENTS>],
+        "decryption":"none",
+        "fallbacks":[
+          {
+            "dest":"/dev/shm/nginx-ssl.sock",
+            "xver":0
+          }
+        ]
+      },
+      "streamSettings":{
+        "network":"tcp",
+        "security":"reality",
+        "realitySettings":{
+          "show":<REALITYSHOW>,
+          "dest":"/dev/shm/nginx-ssl.sock",
+          "xver":0,
+          "serverNames":["<MYDOMAIN>"],
+          "privateKey":"<REALITYPRIVATEKEY>",
+          "minClientVer":"<REALITYMINCLIENTVER>",
+          "maxClientVer":"<REALITYMAXCLIENTVER>",
+          "maxTimeDiff":<REALITYMAXTIMEDIFF>,
+          "shortIds":[<REALITYSHORTIDS>]
+        },
+        "sockopt":{
+          "tcpFastOpen":true,
+          "tcpcongestion":"bbr",
+          "tcpMptcp":true,
+          "tcpNoDelay":true
+        }
+      },
+      "sniffing":{
+        "enabled":true,
+        "destOverride":[
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "listen": "/dev/shm/xray-grpc.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [<GRPCCLIENTS>],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "<GRPCSERVICE>"
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol":"freedom",
+      "settings":{},
+      "tag":"direct"
+    },
+    {
+      "protocol":"blackhole",
+      "settings":{},
+      "tag":"blocked"
+    }
+  ],
+  "routing":{
+    "domainStrategy":"IPOnDemand",
+    "rules":[
+      {
+        "type":"field",
+        "domain":["localhost"],
+        "outboundTag":"blocked"
+      },
+      {
+        "type":"field",
+        "ip":[
+          "10.0.0.0/8",
+          "127.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "fd00::/8"
+        ],
+        "outboundTag":"blocked"
+      }
+    ]
+  }
+}

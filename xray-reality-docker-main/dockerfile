@@ -1,0 +1,44 @@
+FROM teddysun/xray:latest AS xray
+
+FROM ubuntu:latest
+
+ENV REALITYCLIENTS=
+ENV GRPCCLIENTS=
+ENV MYDOMAIN=
+ENV REDIRECTDOMAIN=
+ENV REALITYPRIVATEKEY=
+
+ENV GRPCSERVICE=MyFirstService
+ENV EMAIL=webadmin@microsoft.com
+
+ENV SERVERIP=0.0.0.0
+ENV SERVERPORT=443
+ENV REALITYSHOW=false
+ENV REALITYMINCLIENTVER=
+ENV REALITYMAXCLIENTVER=
+ENV REALITYMAXTIMEDIFF=0
+ENV REALITYSHORTIDS=
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    nginx \
+    cron \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN mkdir -p /etc/nginx
+RUN mkdir -p /etc/nginx/conf.d
+RUN mkdir -p /etc/xray
+
+COPY --from=xray /usr/bin/xray /usr/bin/xray
+COPY xray.conf.template /xray.conf.template
+COPY index.html.template /index.html.template
+COPY nginx-80.conf.template /nginx-80.conf.template
+COPY nginx-ssl.conf.template /nginx-ssl.conf.template
+COPY nginx-setting.conf /etc/nginx/conf.d/nginx-setting.conf
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+
+EXPOSE 80 443
+
+ENTRYPOINT ["/entrypoint.sh"]
